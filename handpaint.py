@@ -55,7 +55,7 @@ class Game:
         mp_hands = mp.solutions.hands
         mp_drawing = mp.solutions.drawing_utils
 
-        with mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) as hands:
+        with mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.4) as hands:
             
             pen = False
             prev_press_time = time.time()
@@ -93,8 +93,17 @@ class Game:
                         thumb = hand_landmarks.landmark[mp_hands.HandLandmark.THUMB_TIP]
                         ring_finger = hand_landmarks.landmark[mp_hands.HandLandmark.RING_FINGER_TIP]
                         
-                        # Add circles to canvas
-                        canvas.circles.append(Circle(index_finger.x * WIDTH, index_finger.y * HEIGHT))
+                        # Calculate thumb & ring finger distance to adjust pen on/off and click
+                        ring_thumb_distance = math.sqrt((thumb.x - ring_finger.x)**2 + (thumb.y - ring_finger.y)**2)
+                        curr_time = time.time()
+                        # Ensure half a second has passed to avoid repeatedly turning pen on/off
+                        if ring_thumb_distance <= 0.1 and curr_time - prev_press_time >= 0.5:
+                            pen = not pen
+                            prev_press_time = curr_time
+
+                        # If pen is enabled, add new circles to canvas
+                        if pen:
+                            canvas.circles.append(Circle(index_finger.x * WIDTH, index_finger.y * HEIGHT))
                         canvas.draw_canvas(index_finger.x * WIDTH, index_finger.y * HEIGHT)
                         
                 cv2.imshow('HandPaint Tracker', image)

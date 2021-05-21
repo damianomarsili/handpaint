@@ -1,7 +1,0 @@
-# TODO PER PROJECTS
-
-1) HANDART:
-	- Reset/Wipe canvas
-	- Ensure only right hand is read
-	- Cursor mode + Option to pen
-	- Eraser mode

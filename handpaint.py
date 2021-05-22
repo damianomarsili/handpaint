@@ -11,6 +11,9 @@ RED = (255, 0, 0)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
+CLEAR_LEFT = 525
+CLEAR_BOTTOM = 75
+
 class Circle:
     
     def __init__(self, x, y):
@@ -24,6 +27,7 @@ class Canvas:
         self.surface = surface
         self.circles = []
         self.surface.fill(WHITE)
+        self.draw_clear_box()
         pygame.display.update()
 
     def draw_circles(self):
@@ -37,7 +41,15 @@ class Canvas:
         self.surface.fill(WHITE)
         self.draw_circles()
         self.draw_cursor(cursor_x, cursor_y)
+        self.draw_clear_box()
         pygame.display.update()
+    
+    def draw_clear_box(self):
+        pygame.draw.rect(self.surface, BLACK, (CLEAR_LEFT, 0, WIDTH - CLEAR_LEFT, CLEAR_BOTTOM), 5)
+
+    def clear_canvas(self):
+        self.circles.clear()
+
 
 class Game:
     
@@ -95,8 +107,9 @@ class Game:
                         
                         # Calculate thumb & ring finger distance to adjust pen on/off and click
                         ring_thumb_distance = math.sqrt((thumb.x - ring_finger.x)**2 + (thumb.y - ring_finger.y)**2)
-                        curr_time = time.time()
+
                         # Ensure half a second has passed to avoid repeatedly turning pen on/off
+                        curr_time = time.time()
                         if ring_thumb_distance <= 0.1 and curr_time - prev_press_time >= 0.5:
                             pen = not pen
                             prev_press_time = curr_time
@@ -104,6 +117,11 @@ class Game:
                         # If pen is enabled, add new circles to canvas
                         if pen:
                             canvas.circles.append(Circle(index_finger.x * WIDTH, index_finger.y * HEIGHT))
+
+                        if index_finger.x * WIDTH >= CLEAR_LEFT and index_finger.y * HEIGHT <= CLEAR_BOTTOM and ring_thumb_distance <= 0.1: 
+                            pen = False
+                            canvas.clear_canvas()
+
                         canvas.draw_canvas(index_finger.x * WIDTH, index_finger.y * HEIGHT)
                         
                 cv2.imshow('HandPaint Tracker', image)
